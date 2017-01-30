@@ -32,7 +32,9 @@ const tokenUrl = `${apiUrl}/authorization/oauth/token`;
 const app = express();
 app.use(session({
   secret: 'sipgate-rest-api-demo',
-  cookie: { maxAge: 60000 }
+  cookie: { maxAge: 60000 },
+  resave: false,
+  saveUninitialized: false
 }));
 
 app.get('/', function (req, res) {
@@ -48,7 +50,7 @@ app.get('/', function (req, res) {
       if (!(response.amount && response.currency)) {
         throw 'Malformed response';
       }
-      
+
       const balanceFormatted = (parseInt(response.amount, 10) / 10000).toFixed(2);
       res.send(`Your sipgate account balance is ${balanceFormatted} ${response.currency}.`);
     })
