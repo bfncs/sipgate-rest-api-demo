@@ -6,7 +6,7 @@ const createApiClient = require('sipgate-rest-api-client').default;
 
 // sipgate REST API settings
 const apiUrl = 'https://api.sipgate.com/v1';
-const desiredScope = 'all';
+const desiredScope = 'balance:read';
 const clientId = process.env.npm_config_client_id;
 const clientSecret = process.env.npm_config_client_secret;
 
@@ -43,9 +43,14 @@ app.get('/', function (req, res) {
   }
 
   const apiClient = createApiClient(apiUrl, accessToken);
-  apiClient.getUserInfo()
+  apiClient.getBalance()
     .then(function (response) {
-      res.send(`<code><pre>${JSON.stringify(response, null, 2)}</pre></code>`);
+      if (!(response.amount && response.currency)) {
+        throw 'Malformed response';
+      }
+      
+      const balanceFormatted = (parseInt(response.amount, 10) / 10000).toFixed(2);
+      res.send(`Your sipgate account balance is ${balanceFormatted} ${response.currency}.`);
     })
     .catch(function(reason) {
       if (reason === 'Unauthorized') {
