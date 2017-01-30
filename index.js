@@ -1,7 +1,7 @@
 const queryString = require('querystring');
 const express = require('express');
 const session = require('express-session');
-const request = require('request');
+const request = require('request-promise-native');
 const createApiClient = require('sipgate-rest-api-client').default;
 
 // sipgate REST API settings
@@ -65,39 +65,29 @@ app.get('/', function (req, res) {
 
 app.get(authPath, function (req, res) {
   const authorizationCode = req.query.code;
-
   if (!authorizationCode) {
     res.redirect(apiAuthUrl);
     return;
   }
 
-  request({
-      url: tokenUrl,
-      method: "POST",
-      form: {
-        client_id: clientId,
-        client_secret: clientSecret,
-        code: authorizationCode,
-        redirect_uri: authRedirectUrl,
-        grant_type: 'authorization_code',
-      },
+  request.post({
+    url: tokenUrl,
+    form: {
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: authorizationCode,
+      redirect_uri: authRedirectUrl,
+      grant_type: 'authorization_code',
     },
-    function (error, response, body) {
-      if (error && response.statusCode !== 200) {
-        res.redirect(apiAuthUrl);
-        return;
-      }
-
-      const responseBody = JSON.parse(body);
-      if (!('access_token' in responseBody)) {
-        res.redirect(apiAuthUrl);
-        return;
-      }
-
-      req.session['accessToken'] = responseBody['access_token'];
+  })
+    .then(function (body) {
+      const response = JSON.parse(body);
+      req.session['accessToken'] = response['access_token'];
       res.redirect('/');
-    }
-  );
+    })
+    .catch(function () {
+      res.redirect(apiAuthUrl);
+    });
 });
 
 app.listen(port, function () {
