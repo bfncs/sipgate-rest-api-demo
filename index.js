@@ -47,12 +47,12 @@ app.get('/', function (req, res) {
   const apiClient = createApiClient(apiUrl, accessToken);
   apiClient.getBalance()
     .then(function (response) {
-      if (!(response.amount && response.currency)) {
+      if (!(response['amount'] && response['currency'])) {
         throw 'Malformed response';
       }
 
-      const balanceFormatted = (parseInt(response.amount, 10) / 10000).toFixed(2);
-      res.send(`Your sipgate account balance is ${balanceFormatted} ${response.currency}.`);
+      const balanceFormatted = (parseInt(response['amount'], 10) / 10000).toFixed(2);
+      res.send(`Your sipgate account balance is ${balanceFormatted} ${response['currency']}.`);
     })
     .catch(function(reason) {
       if (reason === 'Unauthorized') {
